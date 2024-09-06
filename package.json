@@ -2,17 +2,22 @@
   "name": "emergency24-7-main",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "mongoose": "^8.5.3"
   },
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.1.2"
+  }
 }
