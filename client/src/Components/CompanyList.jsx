@@ -1,82 +1,55 @@
-import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import HomeFirstNav from './HomeFirstNav';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from "axios";
+import { useNavigate } from 'react-router-dom';
 
 const CompanyList = () => {
+  const { occupation } = useParams();  // Capture occupation from the route params
+  const [companyData, setCompanyData] = useState([]);
+  const [userInput, setUserInput] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [problems, setProblems] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const navigate = useNavigate(); 
 
+  let socket;
 
-  const companyFeatures = {
-    1: ['24/7 Support', 'Roadside Assistance', 'Repair Services','AC Repair'],
-    2: ['Towing Service', 'Car Wash', 'Oil Change'],
-    3: ['Tire Replacement', 'Battery Jumpstart', 'Engine Diagnostics'],
-    4: ['Brake Repair', 'Transmission Services', 'AC Repair'],
-    5: ['Window Tinting', 'Detailing', 'Alignment Services'],
-    6: ['Engine Overhaul', 'Suspension Repair', 'Exhaust Services'],
-    7: ['Custom Modifications', 'Interior Repairs', 'Paint Services'],
+  // WebSocket setup
+  useEffect(() => {
+    socket = new WebSocket('ws://localhost:5000');
+
+    socket.addEventListener('open', () => {
+      console.log('WebSocket connected');
+    });
+
+    socket.addEventListener('message', (event) => {
+      console.log('Message from server:', event.data);
+    });
+
+    return () => {
+      if (socket) {
+        socket.close();  // Cleanup WebSocket connection when component unmounts
+      }
+    };
+  }, []);
+
+  const handleNavigate = () => {
+    const bookingDetails = {
+      company: selectedCompany.companyname,
+      user: 'John Doe',  // Replace with actual user data
+      problem: problems.join(', '),  // Combine problems into a single string
+      location: '123 Main St',
+    };
+
+    if (socket) {
+      socket.send(JSON.stringify(bookingDetails));  // Send booking details through WebSocket
+    }
+
+    navigate('/emergencyprovider');  // Navigate to emergency provider page
   };
-
-  const companies = [
-    {
-      id: 1,
-      name: 'New Vishwakarma Motors',
-      address: 'Barra Bypass Road Damodar Nagar, Kanpur',
-      photo: "../src/assets/Photos/car_centre.png", 
-      ratings: 38,
-      price: '$20,000',
-    },
-    {
-      id: 2,
-      name: 'Company B',
-      address: 'Address B',
-      photo: "../src/assets/Photos/car_centre.png", 
-      ratings: 42,
-      price: '$30,000',
-    },
-    {
-      id: 3,
-      name: 'Company C',
-      address: 'Address C',
-      photo: "../src/assets/Photos/car_centre.png", 
-      ratings: 30,
-      price: '$25,000',
-    },
-    {
-      id: 4,
-      name: 'Company D',
-      address: 'Address D',
-      photo: "../src/assets/Photos/car_centre.png", 
-      ratings: 45,
-      price: '$28,000',
-    },
-    {
-      id: 5,
-      name: 'Company E',
-      address: 'Address E',
-      photo: "../src/assets/Photos/car_centre.png", 
-      ratings: 45,
-      price: '$28,000',
-    },
-    {
-      id: 6,
-      name: 'Company F',
-      address: 'Address F',
-      photo: "../src/assets/Photos/car_centre.png", 
-      ratings: 45,
-      price: '$28,000',
-    },
-    {
-      id: 7,
-      name: 'Company G',
-      address: 'Address G',
-      photo: "../src/assets/Photos/car_centre.png", 
-      ratings: 45,
-      price: '$28,000',
-    },
-  ];
 
   const bgStyle = {
     backgroundImage: "url('https://i.postimg.cc/XqgdLnDN/img.jpg')",
@@ -89,6 +62,16 @@ const CompanyList = () => {
     alignItems: 'center',
   };
 
+  // Fetch company data based on occupation
+  useEffect(() => {
+    axios.get(`http://localhost:5000/api/emergency/getEmergency/${occupation}`)
+      .then((response) => {
+        console.log('Fetched company data:', response.data);
+        setCompanyData(response.data);
+      })
+      .catch((error) => console.error('Error fetching company data:', error));
+  }, [occupation]);
+
   const handleBookNowClick = (company) => {
     setSelectedCompany(company);
     setShowModal(true);
@@ -96,7 +79,7 @@ const CompanyList = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setProblems([]); 
+    setProblems([]);
   };
 
   const handleAddProblem = () => {
@@ -108,87 +91,93 @@ const CompanyList = () => {
     setProblems(updatedProblems);
   };
 
-  const handleSubmit = () => {
-    // Handle submit logic here
-    console.log('Submitted problems for company:', selectedCompany.name);
-    console.log('Problems:', problems);
-    setShowModal(false);
-    setProblems([]); 
-  };
-
-  const renderStars = (rating) => {
-    const stars = [];
-    for (let i = 0; i < 5; i++) {
-      stars.push(
-        <FontAwesomeIcon
-          key={i}
-          icon={faStar}
-          style={{ marginRight: '2px', color: i < rating / 10 ? '#f9c733' : '#e4e5e9' }}
-        />
-      );
-    }
-    return stars;
-  };
-
   return (
     <div style={bgStyle}>
-      <div className="container">
-      <HomeFirstNav/>
-        <div className="row mt-3" >
-          {companies.map((company) => (
-            <div className="col-md-6 mb-4" key={company.id}>
-              <div className="card d-flex flex-row">
-                <img src={company.photo} alt={company.name} className="card-img-left" style={{ width: '180px', height: 'auto', objectFit: 'cover' }} />
-                <div style={{ padding: '1rem' }}>
-                  <h5 className="card-title">{company.name}</h5>
-                  <p className="card-text">{company.address}</p>
-                  <h6>Features Provided:</h6>
-                  <ul>
-                    {companyFeatures[company.id]?.map((feature, index) => (
-                      <li key={index}>{feature}</li>
-                    ))}
-                  </ul>
-                  <div className="d-flex align-items-center mb-2">
-                    {renderStars(company.ratings)}
-                    <span className="ms-2">{company.ratings} Ratings</span>
+      <div className="container ">
+        <div className="overflow-hidden " style={{ top: 0, zIndex: 1050 }}>
+          <HomeFirstNav />
+        </div>
+        <div className="row mt-3">
+          {companyData.length === 0 ? (
+            <p>No companies available for the selected occupation.</p>
+          ) : (
+            companyData.map((company) => (
+              <div className="col-md-6 mb-4" key={company._id}>
+                <div className="card d-flex flex-row border border-black border-3">
+                  <img
+                    src={company.photo}
+                    alt={company.fullname}
+                    className="card-img-left m-3 border border-black"
+                    style={{ width: '180px', height: 'auto', objectFit: 'cover' }}
+                  />
+                  <div style={{ padding: '1rem' }}>
+                    <h3 className="card-title border-bottom border-black border-3 "><em>{company.companyname}</em></h3>
+                    <p className="card-text"><em><svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" className="bi bi-geo-alt" viewBox="0 0 16 16">
+                      <path d="M12.166 8.94c-.524 1.062-1.234 2.12-1.96 3.07A32 32 0 0 1 8 14.58a32 32 0 0 1-2.206-2.57c-.726-.95-1.436-2.008-1.96-3.07C3.304 7.867 3 6.862 3 6a5 5 0 0 1 10 0c0 .862-.305 1.867-.834 2.94M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10"/>
+                      <path d="M8 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4m0 1a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+                    </svg>{company.occupationaddress}</em></p>
+                    <h5 ><em className='border-black border-2 border-bottom'>Features Provided:</em></h5>
+                    <ul>
+                      {company.features?.map((feature, index) => (
+                        <li key={index}>{feature}</li>
+                      ))}
+                    </ul>
+                    <p style={{ fontWeight: 'bold' }}>Price: {company.price}</p>
+                    <div className='d-flex justify-content-between'>
+                      <button
+                        type="button"
+                        className="btn btn-primary mb-3"
+                        onClick={() => handleBookNowClick(company)}
+                      >Book Now
+                      </button>
+                      <div>
+                        <div className='d-flex'>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="yellow" className="bi bi-star-fill" viewBox="0 0 16 16">
+                            <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+                          </svg>
+                          {/* Other rating stars */}
+                        </div>
+                        Ratings
+                      </div>
+                    </div>
                   </div>
-                  <p style={{ fontWeight: 'bold' }}>Price: {company.price}</p>
-                  <button type="button" className="btn btn-primary mb-3" onClick={() => handleBookNowClick(company)}>Book Now</button>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* Modal */}
-        <div className={`modal fade ${showModal ? 'show' : ''}`} tabIndex="-1" style={{ display: showModal ? 'block' : 'none' }} data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="modalLabel" aria-hidden="true">
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title" id="modalLabel">Add your problems to {selectedCompany ? selectedCompany.name : ''}</h5>
-                <button type="button" className="btn-close" onClick={handleCloseModal} aria-label="Close"></button>
-              </div>
-              <div className="modal-body">
-                {problems.map((problem, index) => (
-                  <div className="mb-3" key={index}>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={problem}
-                      onChange={(e) => handleProblemChange(index, e.target.value)}
-                      placeholder="Enter problem description"
-                    />
-                  </div>
-                ))}
-                <button type="button" className="btn btn-secondary" onClick={handleAddProblem}>+ Add your Problem</button>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Cancel</button>
-                <button type="button" className="btn btn-primary" onClick={handleSubmit}>Book</button>
+        {showModal && (
+          <div className="modal fade show" style={{ display: 'block', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <div className="modal-content border border-black border-3">
+                <div className="modal-header border-bottom border-black border-2">
+                  <h5 className="modal-title border-bottom border-1 border-black fw-bold"><em>Add your problems to {selectedCompany ? selectedCompany.companyname : ''}</em></h5>
+                  <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                </div>
+                <div className="modal-body border-bottom border-black border-2">
+                  {problems.map((problem, index) => (
+                    <div className="mb-3" key={index}>
+                      <input
+                        type="text"
+                        className="form-control border border-black border-1"
+                        value={problem}
+                        onChange={(e) => handleProblemChange(index, e.target.value)}
+                        placeholder="Enter problem description"
+                      />
+                    </div>
+                  ))}
+                  <button type="button" className="btn btn-secondary" onClick={handleAddProblem}>+ Add your Problem</button>
+                </div>
+                <div className="modal-footer d-flex justify-content-between border-top border-black border-2">
+                  <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
+                  <button type="button" className="btn btn-primary" onClick={handleNavigate}>Submit</button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

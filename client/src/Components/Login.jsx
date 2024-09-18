@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 
 
@@ -35,7 +36,29 @@ function Login() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+     
+    try {
+      const response=await axios.post("http://localhost:5000/api/auth/login",{
+      email,
+      password,
+      });
+      console.log({email,password});
+      console.log("Response", response);
+      if(response.status==200)
+      {
+        const {fullname}=response.data;
+        setEmail(" ");
+        setPassword(" ");
+        alert(' signed in successfully!');
+        navigate('/home', { state: { fullname } });
+      }
+    }
+    catch(error) {
+      console.error('Sign in error:', error.response?.data || error.message); // Log the error response
+      alert(error.response?.data?.error || 'Please try again.');
+    }
   };
+  
 
   return (
     <div className="App1" style={bgStyle}>

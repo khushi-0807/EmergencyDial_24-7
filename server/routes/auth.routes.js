@@ -1,13 +1,16 @@
 import express from "express";
-import {signupuser,signupemergency,login} from "../controllers/auth.controller.js"
-const router=express.Router();
+import {
+  signupUser,
+  signupEmergency,
+  login,
+} from "../controllers/auth.controller.js";
+import upload from "../middleware/multerPhoto.js";
 
+const router = express.Router();
 
-router.post("/signupuser",signupuser);
-
-router.post("/signupemergency",signupemergency)
-
-router.post("/login",login);
-
+// Define the signup and login routes
+router.post("/signupuser", signupUser);
+router.post("/signupemergency", upload.single("photo"), signupEmergency);
+router.post("/login", login);
 
 export default router;

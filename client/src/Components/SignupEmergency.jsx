@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function SignupEmergency() {
   const [occupation, setOccupation] = useState('');
@@ -38,6 +39,45 @@ function SignupEmergency() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     // Handle form submission logic
+   
+    try {
+      const response = await axios.post("http://localhost:5000/api/auth/signupemergency",
+        {
+        occupation,
+        fullName,
+        companyName,
+        email,
+        occupationAddress,
+        phoneNo,
+        featuresProvided,
+        photo,
+        password,
+        confirmPassword,
+
+      });
+      if(response.status===201)
+      {
+        setOccupation('');
+        setFullName('');
+        setCompanyName('');
+        setEmail('');
+        setOccupationAddress('');
+        setPhoneNo('');
+        setFeaturesProvided('');
+        setPhoto(null);
+        setPassword('');
+        setConfirmPassword('');
+        alert('emergency signed up successfully!');
+        navigate('/login');
+      }
+      
+    }catch (error) {
+      console.error('Emergency Sign up error:', error.response?.data || error.message); // Log the error response
+      alert(error.response?.data?.error || 'Failed to Emergency sign up. Please try again.');
+    }
+
+
+
   };
 
   const bgStyle = {
@@ -68,9 +108,9 @@ function SignupEmergency() {
                 required
               >
                 <option value="" disabled>Select Your Occupation</option>
-                <option value="mechanic">mechanic</option>
-                <option value="hospitality">hospitality</option>
-                <option value="fire brigade">fire brigade</option>
+                <option value="mechanic">Mechanic</option>
+                <option value="hospitality">Hospitality</option>
+                <option value="fire brigade">Fire Brigade</option>
                 {/* Add more options as needed */}
               </select>
             </div>
@@ -187,7 +227,7 @@ function SignupEmergency() {
               />
             </div>
             <p>By pressing "Signup" you agree to our Terms & Conditions</p>
-            <button type="submit" className="btn btn-primary w-100 mb-3">Signup</button>
+            <button type="submit" className="btn btn-primary w-100 mb-3 " onClick={{handleSubmit}}>Signup</button>
           </form>
           <div className="switch-form text-center">
             <p>Already have an account? <button onClick={() => navigate('/login')} className="btn btn-link p-0">Login</button></p>
