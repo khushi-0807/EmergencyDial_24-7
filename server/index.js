@@ -8,12 +8,11 @@ import { fileURLToPath } from "url";
 import authRoutes from "./routes/auth.routes.js";
 import emergencyRoutes from "./routes/emergency.routes.js";
 import problemRoutes from "./routes/problem.routes.js";
-import { WebSocketServer } from "ws";
-
+import { Server } from "socket.io";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000; // Ensure the port is set to 5000 to match frontend calls
+const PORT = process.env.PORT || 5000; // Port number for both Express and WebSocket
 
 // Middleware
 app.use(cors());
@@ -34,35 +33,37 @@ app.use("/api/auth", authRoutes);
 app.use("/api/emergency", emergencyRoutes);
 app.use("/api/problem", problemRoutes);
 
-// Initialize server for Express.js
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Create an HTTP server
+const server = app.listen(5000, () => {
+  console.log(`Server is running on port 5000`);
   connectToMongoDB();
 });
 
-const wss = new WebSocketServer({ server });
+const io = new Server(server, {
+  // pingTimeout: 60000,
+  cors: {
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
 
-wss.on("connection", function connection(ws) {
-  console.log("New WebSocket connection established");
-
-  ws.send(JSON.stringify({ message: "Welcome user, How can I assist you?" }));
-
-  ws.on("message", function message(data) {
-    console.log("Message received:", data);
-
-    // Broadcast the message to all connected clients
-    wss.clients.forEach(function each(client) {
-      if (client.readyState === ws.OPEN) {
-        client.send(data); // Broadcast the received message
-      }
-    });
+io.on("connection", (socket) => {
+  //Listens for new client connections to establish communication.
+  console.log("connected to Clients");
+  socket.on("User_Problems", (data) => {
+    // Listens for specific data sent by a client, enabling interaction based on custom events.
+    console.log(data);
+    io.emit("recieved_user_problems", data); //Broadcasts data to all clients, useful for sharing updates or information in real-time.
+    console.log(data);
   });
 
-  ws.on("close", () => {
+  socket.on("Send_Status", (data) => {
+    console.log(data);
+    io.emit("Status_Checked", data);
+    console.log(data);
+  });
+
+  socket.on("disconnect", () => {
     console.log("Client disconnected");
-  });
-
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
   });
 });

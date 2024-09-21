@@ -68,7 +68,7 @@ function SignupEmergency() {
         setPassword('');
         setConfirmPassword('');
         alert('emergency signed up successfully!');
-        navigate('/login');
+        navigate('/emergencyprovider');
       }
       
     }catch (error) {

@@ -8,6 +8,7 @@ import Signup from "./Components/Signup";
 import CompanyList from "./Components/CompanyList";
 import EmergencyProviderDetails from "./Components/EmergencyProviderDetails";
 import EmergencyProvider from "./Components/EmergencyProvider";
+import UserRequested from "./Components/UserRequested";
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/companylist/:occupation" element={<CompanyList/>}/>
         <Route path="/emergencyproviderdetails" element={<EmergencyProviderDetails/>}/>
         <Route path="/emergencyprovider" element={<EmergencyProvider/>}/>
+        <Route path="/UserRequested" element={<UserRequested/>}/>
       </Routes>
     </Router>
   );

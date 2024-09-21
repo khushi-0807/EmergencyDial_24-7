@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 
 
 
@@ -12,6 +13,8 @@ function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { person } = location.person || {};
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -46,11 +49,21 @@ function Login() {
       console.log("Response", response);
       if(response.status==200)
       {
-        const {fullname}=response.data;
+        const {fullname,profileType}=response.data;
         setEmail(" ");
         setPassword(" ");
         alert(' signed in successfully!');
-        navigate('/home', { state: { fullname } });
+        // if(person==User)
+        // navigate('/home', { state: { fullname } });
+        // else
+        // navigate('/emergencyProvider', { state: { fullname } });
+        if (profileType === "user") {
+          navigate('/home', { state: { fullname } });
+        } else if (profileType === "emergency") {
+          navigate('/emergencyProvider', { state: { fullname } });
+        } else {
+          alert("Invalid profile type. Please try again.");
+        }
       }
     }
     catch(error) {

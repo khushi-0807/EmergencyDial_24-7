@@ -44,6 +44,7 @@ function Signup() {
   
       if (response.status === 201) {
         // Reset form after successful signup
+        
         setFullName('');
         setEmail('');
         setAddress('');
@@ -51,7 +52,7 @@ function Signup() {
         setPassword('');
         setConfirmPassword('');
         alert('User signed up successfully!');
-        navigate('/login');
+        navigate('/login' );
       }
   
     } catch (error) {

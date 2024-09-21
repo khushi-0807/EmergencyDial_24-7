@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import {io} from "socket.io-client";
+var socket = io("http://localhost:5000");
 
 const CompanyList = () => {
   const { occupation } = useParams();  // Capture occupation from the route params
@@ -13,42 +15,58 @@ const CompanyList = () => {
   const [showModal, setShowModal] = useState(false);
   const [problems, setProblems] = useState([]);
   const [selectedCompany, setSelectedCompany] = useState(null);
+  const[Socket,setSocket]=useState(false);
   const navigate = useNavigate(); 
 
-  let socket;
+  // let socket;
 
-  // WebSocket setup
-  useEffect(() => {
-    socket = new WebSocket('ws://localhost:5000');
+  // useEffect(() => {
+  //   socket = new WebSocket('ws://localhost:5000');
+    
+  //   socket.onopen = () => {
+  //     console.log('WebSocket connected');
+  //   };
+    
+  //   socket.onmessage = (event) => {
+  //     console.log('Message from server:', event.data);
+  //   };
 
-    socket.addEventListener('open', () => {
-      console.log('WebSocket connected');
-    });
+  //   socket.onerror = (error) => {
+  //     console.error('WebSocket error:', error);
+  //   };
 
-    socket.addEventListener('message', (event) => {
-      console.log('Message from server:', event.data);
-    });
+  //   return () => {
+  //     if (socket) {
+  //       socket.close();
+  //     }
+  //   };
+  // }, []);
+  
+ 
 
-    return () => {
-      if (socket) {
-        socket.close();  // Cleanup WebSocket connection when component unmounts
-      }
-    };
-  }, []);
+  
+  //  useEffect(()=>{
+   
+  //   //socket.on("hii", (arg) => {
+  //     //   console.log("message", arg);
+  //     // });
+  //     socket.emit('setup ', "Hello data get");
+  //     socket.on('connection',()=>{setSocket(true)})
+  //  })
+ 
+
+  
+
 
   const handleNavigate = () => {
-    const bookingDetails = {
-      company: selectedCompany.companyname,
-      user: 'John Doe',  // Replace with actual user data
-      problem: problems.join(', '),  // Combine problems into a single string
-      location: '123 Main St',
-    };
-
-    if (socket) {
-      socket.send(JSON.stringify(bookingDetails));  // Send booking details through WebSocket
-    }
-
-    navigate('/emergencyprovider');  // Navigate to emergency provider page
+    
+    // const bookingDetails = problems;
+    // if (socket) {
+    //   socket.send(JSON.stringify(bookingDetails));  // Send booking details through WebSocket
+    // }
+    socket.emit('User_Problems', { message: problems, timestamp: new Date() });
+    setProblems(' ');
+    navigate('/UserRequested');  // Navigate to emergency provider page
   };
 
   const bgStyle = {
