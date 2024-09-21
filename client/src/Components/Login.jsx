@@ -45,13 +45,12 @@ function Login() {
       email,
       password,
       });
-      console.log({email,password});
-      console.log("Response", response);
       if(response.status==200)
       {
         const {fullname,profileType}=response.data;
         setEmail(" ");
         setPassword(" ");
+<<<<<<< HEAD
         alert(' signed in successfully!');
         // if(person==User)
         // navigate('/home', { state: { fullname } });
@@ -63,6 +62,14 @@ function Login() {
           navigate('/emergencyProvider', { state: { fullname } });
         } else {
           alert("Invalid profile type. Please try again.");
+=======
+        alert('Login successfull!');
+        
+        if (profileType === 'user') {
+          navigate('/home', { state: { fullname } });
+        } else if (profileType === 'emergency') {
+          navigate('/emergencyprovider');
+>>>>>>> a5c6ba9558f740fcfd0ec689c0d39431348344f3
         }
       }
     }

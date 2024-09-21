@@ -5,10 +5,9 @@ import Emergency from "../models/emergency.model.js";
 // User signup
 export const signupUser = async (req, res) => {
   try {
-    const { fullName, email, address, phoneNo, password, confirmPassword } =
-      req.body;
-
-    // Check if the user or emergency already exists
+    const { fullName, email, address, phoneNo, password, confirmPassword ,latitude,longitude} = req.body;
+    console.log(req.body);
+        // Check if the user or emergency already exists
     const existingUser = await User.findOne({ email });
     const existingEmergency = await Emergency.findOne({ email });
 
@@ -30,6 +29,8 @@ export const signupUser = async (req, res) => {
       email,
       address,
       phone: phoneNo,
+      latitude,
+      longitude,
       password: hashedPassword,
     });
 
@@ -42,33 +43,9 @@ export const signupUser = async (req, res) => {
 
 // Emergency signup
 export const signupEmergency = async (req, res) => {
-  console.log(req.body, "hello");
-  try {
-    const {
-      occupation,
-      fullName,
-      companyName,
-      occupationAddress,
-      phoneNo,
-      password,
-      email,
-      features,
-      confirmPassword,
-    } = req.body;
 
-    if (
-      !fullName &&
-      !companyName &&
-      !occupationAddress &&
-      !phoneNo &&
-      !password &&
-      !email &&
-      !occupation &&
-      !features &&
-      !confirmPassword
-    ) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
+  try {
+    const {occupation,fullName,companyName,address,phoneNo,password,email,features,confirmPassword,latitude,longitude} = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({ error: "Passwords do not match" });
@@ -81,16 +58,17 @@ export const signupEmergency = async (req, res) => {
       companyname: companyName,
       occupation,
       email,
-      occupationaddress: occupationAddress,
+      address,
       features,
       phone: phoneNo,
+      latitude,
+      longitude,
       photo: req.file ? req.file.path : "", // Ensure `photo` is handled correctly
       password: hashedPassword,
     });
 
     await newEmergency.save();
-
-    res.status(201).json({ message: "Emergency signed up successfully!" });
+     res.status(201).json({ message: "Emergency registered successfully!" });
   } catch (error) {
     console.error("Error in signupEmergency:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -101,14 +79,11 @@ export const signupEmergency = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log({ email, password });
     let user = await User.findOne({ email });
     let emergency = null;
 
-    console.log("User found:", user);
     if (!user) {
       emergency = await Emergency.findOne({ email });
-      console.log("Emergency contact found:", emergency);
     }
 
     if (user) {
@@ -123,6 +98,8 @@ export const login = async (req, res) => {
         email: user.email,
         address: user.address,
         phone: user.phone,
+        latitude:user.latitude,
+        longitude:user.longitude,
         profileType: "user",
       });
     }
@@ -135,7 +112,6 @@ export const login = async (req, res) => {
       if (!isPasswordCorrect) {
         return res.status(400).json({ error: "Invalid email or password" });
       }
-      console.log(res.body);
       return res.status(200).json({
         _id: emergency._id,
         fullname: emergency.fullname,
@@ -145,12 +121,14 @@ export const login = async (req, res) => {
         occupationaddress: emergency.occupationaddress,
         phone: emergency.phone,
         features: emergency.features,
+        latitude:emergency.latitude,
+        longitude:emergency.longitude,
         photo: emergency.photo,
         profileType: "emergency",
       });
     }
 
-    return res.status(400).json({ error: "Account Passed" });
+    return res.status(200).json({ message: "Login successfull!" });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }

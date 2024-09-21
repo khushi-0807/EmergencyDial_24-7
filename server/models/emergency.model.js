@@ -18,7 +18,7 @@ const emergencySchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  occupationaddress: {
+  address: {
     type: String,
     required: true,
   },
@@ -32,6 +32,12 @@ const emergencySchema = new mongoose.Schema({
   },
   photo: {
     type: String,
+  },
+  latitude: {
+    type: Number,
+  },
+  longitude: {
+    type: Number,
   },
   password: {
     type: String,
