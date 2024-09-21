@@ -13,7 +13,7 @@ import { WebSocketServer } from "ws";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000; // Ensure the port is set to 5000 to match frontend calls
+const PORT = process.env.PORT || 5000; 
 
 // Middleware
 app.use(cors());

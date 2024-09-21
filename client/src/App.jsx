@@ -10,11 +10,13 @@ import EmergencyProviderDetails from "./Components/EmergencyProviderDetails";
 import EmergencyProvider from "./Components/EmergencyProvider";
 
 
+
 function App() {
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomeFirst />} />
+        <Route path="/" element={<HomeFirst/> } />
         <Route path="/home" element={<Home/>} />
         <Route path="/login" element={<Login/>}/>
         <Route path="/signup" element={<Signup/>}/>
@@ -23,6 +25,7 @@ function App() {
         <Route path="/companylist/:occupation" element={<CompanyList/>}/>
         <Route path="/emergencyproviderdetails" element={<EmergencyProviderDetails/>}/>
         <Route path="/emergencyprovider" element={<EmergencyProvider/>}/>
+        
       </Routes>
     </Router>
   );

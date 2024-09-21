@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; // For making requests to the backend
+import SearchAddress from './SearchAddress';
 
-function Signup() {
+export default function Signup() {
+  
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
@@ -12,6 +14,7 @@ function Signup() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [coordinates,setCoordinates]=useState({});
   const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
@@ -29,8 +32,19 @@ function Signup() {
     alignItems: 'center',
   };
 
+  console.log(coordinates);
+  
+
   const handleSubmit = async (event) => {
+    // const {latitude,longitude}=this.state;
     event.preventDefault();
+    if (!coordinates.lat || !coordinates.lng) {
+      alert('Please select a valid address');
+      return;
+    
+    }
+
+    const { lat: latitude, lng: longitude } = coordinates;
 
     try {
       const response = await axios.post('http://localhost:5000/api/auth/signupuser', {
@@ -40,6 +54,8 @@ function Signup() {
         phoneNo,
         password,
         confirmPassword,
+        latitude,
+        longitude,
       });
   
       if (response.status === 201) {
@@ -68,7 +84,7 @@ function Signup() {
             <h2>Welcome to Emergency-dial</h2>
             <p>Signup to Continue</p>
           </div>
-          <form className="form" onSubmit={handleSubmit}>
+          <form className="form">
             <div className="form-group mb-3">
               <input
                 type="text"
@@ -90,12 +106,14 @@ function Signup() {
               />
             </div>
             <div className="form-group mb-3">
-              <input
+              <SearchAddress
                 type="text"
                 className="form-control"
                 placeholder="Address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
+                setCoordinates={setCoordinates}
+                setAddress={setAddress}
                 required
               />
             </div>
@@ -142,7 +160,7 @@ function Signup() {
               />
             </div>
             <p>By pressing "Signup" you agree to our Terms & Conditions</p>
-            <button type="submit" className="btn btn-primary w-100 mb-3">Signup</button>
+            <button type="submit" className="btn btn-primary w-100 mb-3" onClick={handleSubmit}>Signup</button>
           </form>
           <div className="switch-form text-center">
             <p>Already have an account? <button onClick={() => navigate('/login')} className="btn btn-link p-0">Login</button></p>
@@ -153,4 +171,4 @@ function Signup() {
   );
 }
 
-export default Signup;
+

@@ -16,10 +16,9 @@ function HomeMiddleNF() {
         </svg>
       </div>
       <div className="mx-4 my-3 ml-5">
-        <h1>Welcome you!!</h1>
-        <br />
+        <h1>Welcome</h1>
         {/* Display fetched username */}
-        <h1 className=''>{fullname}</h1>
+        <h1 className=''>{fullname} !!</h1>
         <p className="lead">How can I assist you? Feel free to ask us...</p>
         <nav className="navbar navbar-light bg-body-secondary">
           <form className="form-inline d-flex">

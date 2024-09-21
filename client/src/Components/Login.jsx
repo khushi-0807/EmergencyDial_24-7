@@ -42,15 +42,18 @@ function Login() {
       email,
       password,
       });
-      console.log({email,password});
-      console.log("Response", response);
       if(response.status==200)
       {
-        const {fullname}=response.data;
+        const {fullname,profileType}=response.data;
         setEmail(" ");
         setPassword(" ");
-        alert(' signed in successfully!');
-        navigate('/home', { state: { fullname } });
+        alert('Login successfull!');
+        
+        if (profileType === 'user') {
+          navigate('/home', { state: { fullname } });
+        } else if (profileType === 'emergency') {
+          navigate('/emergencyprovider');
+        }
       }
     }
     catch(error) {
