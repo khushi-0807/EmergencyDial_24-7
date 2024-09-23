@@ -15,6 +15,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "axios": "^1.7.7",
+    "browser-image-compression": "^2.0.2",
     "dotenv": "^16.4.5",
     "google-map-react": "^2.2.1",
     "react": "^18.3.1",

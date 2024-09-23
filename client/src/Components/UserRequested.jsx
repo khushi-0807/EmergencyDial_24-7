@@ -37,7 +37,7 @@ function UserRequested() {
 </svg>
       </div>
     </div>
-    <h1 className="display-4 fw-bold text-body-emphasis">  {status ? "Request Accepted" : "Processing Request..."}</h1>
+    <h1 className="display-4 fw-bold text-body-emphasis">  {status ? data=="accepted"?"Request Accepted":"Sorry " : "Processing Request..."}</h1>
     <div className="col-lg-6 mx-auto">
       <p className="lead mb-4">Thank you for your patience! Your request is currently being reviewed, and we appreciate your understanding as we process it. Please hold on for a moment until it is accepted. We’re doing our best to handle everything as quickly as possible, and we’ll notify you as soon as it’s completed.</p>
       <div className="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5">

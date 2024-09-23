@@ -3,7 +3,7 @@ import React from 'react'
 function HomeFServicesDayToDay() {
   return (
     <div className="container px-4 pt-5 pb-3" id="hanging-icons">
-    <h2 className="pb-2 border-bottom border-black border-2">Some of our services that will prove useful to you on a day-to-day basis are :</h2>
+    <h2 className="pb-2 border-bottom border-black border-2">Our services that will prove useful to you on a day-to-day basis :</h2>
     <div className="row g-4 py-5 row-cols-1 row-cols-lg-3 m-3">
       <div className="col d-flex align-items-start">
         <div className=" d-inline-flex align-items-center justify-content-center fs-4 flex-shrink-0 me-3">

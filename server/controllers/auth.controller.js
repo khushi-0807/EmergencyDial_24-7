@@ -1,6 +1,14 @@
 import bcrypt from "bcryptjs";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from "path";
+import fs from 'fs';
 import User from "../models/user.model.js";
 import Emergency from "../models/emergency.model.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 
 // User signup
 export const signupUser = async (req, res) => {
@@ -43,15 +51,39 @@ export const signupUser = async (req, res) => {
 
 // Emergency signup
 export const signupEmergency = async (req, res) => {
-
   try {
-    const {occupation,fullName,companyName,address,phoneNo,password,email,features,confirmPassword,latitude,longitude} = req.body;
+    const {
+      occupation,
+      fullName,
+      companyName,
+      address,
+      phoneNo,
+      password,
+      email,
+      features,
+      confirmPassword,
+      latitude,
+      longitude,
+      photo, // Assuming this is your Base64 string
+    } = req.body;
 
     if (password !== confirmPassword) {
       return res.status(400).json({ error: "Passwords do not match" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Remove the "data:image/png;base64," prefix
+    const base64Data = photo.replace(/^data:image\/png;base64,/, "");
+    const imgBuffer = Buffer.from(base64Data, 'base64');
+
+    // Define the image file name and path
+    const imageName = `${Date.now()}.png`; // Use a timestamp to create a unique file name
+    const uploadsDir = path.join(__dirname, 'uploads'); // Make sure this folder exists
+    const photoPath = `/uploads/${imageName}`; // URL path to store in the database
+
+    // Save the image to the uploads directory
+    fs.writeFileSync(path.join(uploadsDir, imageName), imgBuffer);
 
     const newEmergency = new Emergency({
       fullname: fullName,
@@ -63,12 +95,12 @@ export const signupEmergency = async (req, res) => {
       phone: phoneNo,
       latitude,
       longitude,
-      photo: req.file ? req.file.path : "", // Ensure `photo` is handled correctly
+      photo: photoPath, // Store the relative path in the database
       password: hashedPassword,
     });
 
     await newEmergency.save();
-     res.status(201).json({ message: "Emergency registered successfully!" });
+    res.status(201).json({ message: "Emergency registered successfully!" });
   } catch (error) {
     console.error("Error in signupEmergency:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -84,6 +116,10 @@ export const login = async (req, res) => {
 
     if (!user) {
       emergency = await Emergency.findOne({ email });
+    }
+
+    if (!user && !emergency) {
+      return res.status(400).json({ error: "Invalid email or password" });
     }
 
     if (user) {

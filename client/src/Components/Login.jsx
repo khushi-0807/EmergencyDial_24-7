@@ -45,16 +45,20 @@ function Login() {
       email,
       password,
       });
-      if(response.status==200)
+      if(response.status===200)
       {
         const {fullname,profileType}=response.data;
-        setEmail(" ");
-        setPassword(" ");
-        alert('Login successfull!');
         
         if (profileType === 'user') {
+          setEmail('');
+          setPassword('');
+          alert('Login successfull!');
           navigate('/home', { state: { fullname } });
-        } else if (profileType === 'emergency') {
+        } 
+        else if (profileType === 'emergency') {
+          setEmail('');
+          setPassword('');
+          alert('Login successfull!');
           navigate('/emergencyprovider');
         }
       }
