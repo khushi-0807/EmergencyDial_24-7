@@ -7,7 +7,7 @@ function HomeMiddleNav() {
   const { fullname } = location.state || {};
   return (
     <div className="bg-body-secondary p-4 rounded mt-3  border border-black border-2">
-    <HomeMiddleNF fullname={fullname}/>
+    <HomeMiddleNF fullname={fullname}  />
     </div>
   )
 }

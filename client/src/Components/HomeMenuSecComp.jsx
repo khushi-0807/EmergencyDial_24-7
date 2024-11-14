@@ -1,8 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-function HomeMenuSecComp({ occupation, description,photo }) {
+function HomeMenuSecComp({ occupation, description,photo ,_id}) {
   const navigate = useNavigate();
+  console.log(_id);
   return (
     <div className="col">
       <div className="card shadow-sm">
@@ -15,7 +16,7 @@ function HomeMenuSecComp({ occupation, description,photo }) {
               <button
                 type="button"
                 className="btn btn-sm btn-outline-secondary px-4"
-                onClick={() => navigate(`/companylist/${occupation}`)} // Pass the selected occupation
+                onClick={() => navigate(`/companylist/${occupation}`,{ state: { _id:_id } })} // Pass the selected occupation
               >
                 View Emergencies
               </button>

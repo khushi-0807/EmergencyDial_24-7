@@ -9,9 +9,9 @@ function HomeFPopluarSearch() {
       <div className="card border border-black border-2" style={{width: "18rem"}}>
   <img src="../src/assets/Photos/Ambulance2.jpeg" className="card-img-top" alt="..."/>
   <div className="card-body">
-    <h5 className="card-title">Card title</h5>
+    <h5 className="card-title">Ambulance</h5>
     <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-    <a href="#" className="btn btn-primary">Go somewhere</a>
+    <a href="#" className="btn btn-primary">View more</a>
   </div>
 </div>
       </div>
@@ -19,9 +19,9 @@ function HomeFPopluarSearch() {
       <div className="card border-black border-2" style={{width: "18rem"}}>
   <img src="../src/assets/Photos/FireDepartment2.jpeg" className="card-img-top" alt="..."/>
   <div className="card-body">
-    <h5 className="card-title">Card title</h5>
+    <h5 className="card-title">Fire Brigade</h5>
     <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-    <a href="#" className="btn btn-primary">Go somewhere</a>
+    <a href="#" className="btn btn-primary">View more</a>
   </div>
 </div>
       </div>
@@ -29,9 +29,9 @@ function HomeFPopluarSearch() {
       <div className="card border-black border-2" style={{width: "18rem"}}>
   <img src="../src/assets/Photos/Vehicle.jpeg" className="card-img-top" alt="..."/>
   <div className="card-body">
-    <h5 className="card-title">Card title</h5>
+    <h5 className="card-title">Mechanic</h5>
     <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-    <a href="#" className="btn btn-primary">Go somewhere</a>
+    <a href="#" className="btn btn-primary">View more</a>
   </div>
 </div>
       </div>

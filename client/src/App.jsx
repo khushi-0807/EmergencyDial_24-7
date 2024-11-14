@@ -9,6 +9,7 @@ import CompanyList from "./Components/CompanyList";
 import EmergencyProviderDetails from "./Components/EmergencyProviderDetails";
 import EmergencyProvider from "./Components/EmergencyProvider";
 import UserRequested from "./Components/UserRequested";
+import TrackEmergencyService from "./Components/TrackEmergencyService";
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route path="/emergencyproviderdetails" element={<EmergencyProviderDetails/>}/>
         <Route path="/emergencyprovider" element={<EmergencyProvider/>}/>
         <Route path="/UserRequested" element={<UserRequested/>}/>
+        <Route path="/TrackEmergencyService" element={<TrackEmergencyService/>}/>
       </Routes>
     </Router>
   );

@@ -47,19 +47,19 @@ function Login() {
       });
       if(response.status===200)
       {
-        const {fullname,profileType}=response.data;
+        const {fullname,profileType,_id}=response.data;
         
         if (profileType === 'user') {
           setEmail('');
           setPassword('');
           alert('Login successfull!');
-          navigate('/home', { state: { fullname } });
+          navigate('/home', { state: { fullname ,_id} });
         } 
         else if (profileType === 'emergency') {
           setEmail('');
           setPassword('');
           alert('Login successfull!');
-          navigate('/emergencyprovider');
+          navigate('/emergencyprovider',{ state: { companyId: _id } });
         }
       }
     }

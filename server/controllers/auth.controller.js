@@ -1,21 +1,29 @@
 import bcrypt from "bcryptjs";
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import path from "path";
-import fs from 'fs';
+import fs from "fs";
 import User from "../models/user.model.js";
 import Emergency from "../models/emergency.model.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-
 // User signup
 export const signupUser = async (req, res) => {
   try {
-    const { fullName, email, address, phoneNo, password, confirmPassword ,latitude,longitude} = req.body;
+    const {
+      fullName,
+      email,
+      address,
+      phoneNo,
+      password,
+      confirmPassword,
+      latitude,
+      longitude,
+    } = req.body;
     console.log(req.body);
-        // Check if the user or emergency already exists
+    // Check if the user or emergency already exists
     const existingUser = await User.findOne({ email });
     const existingEmergency = await Emergency.findOne({ email });
 
@@ -64,7 +72,7 @@ export const signupEmergency = async (req, res) => {
       confirmPassword,
       latitude,
       longitude,
-      photo, // Assuming this is your Base64 string
+      // photo, // Assuming this is your Base64 string
     } = req.body;
 
     if (password !== confirmPassword) {
@@ -74,16 +82,16 @@ export const signupEmergency = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Remove the "data:image/png;base64," prefix
-    const base64Data = photo.replace(/^data:image\/png;base64,/, "");
-    const imgBuffer = Buffer.from(base64Data, 'base64');
+    // const base64Data = photo.replace(/^data:image\/png;base64,/, "");
+    // const imgBuffer = Buffer.from(base64Data, 'base64');
 
     // Define the image file name and path
-    const imageName = `${Date.now()}.png`; // Use a timestamp to create a unique file name
-    const uploadsDir = path.join(__dirname, 'uploads'); // Make sure this folder exists
-    const photoPath = `/uploads/${imageName}`; // URL path to store in the database
+    // const imageName = `${Date.now()}.png`; // Use a timestamp to create a unique file name
+    // const uploadsDir = path.join(__dirname, 'uploads'); // Make sure this folder exists
+    // const photoPath = `/uploads/${imageName}`; // URL path to store in the database
 
     // Save the image to the uploads directory
-    fs.writeFileSync(path.join(uploadsDir, imageName), imgBuffer);
+    // fs.writeFileSync(path.join(uploadsDir, imageName), imgBuffer);
 
     const newEmergency = new Emergency({
       fullname: fullName,
@@ -95,7 +103,7 @@ export const signupEmergency = async (req, res) => {
       phone: phoneNo,
       latitude,
       longitude,
-      photo: photoPath, // Store the relative path in the database
+      // photo: photoPath, // Store the relative path in the database
       password: hashedPassword,
     });
 
@@ -134,8 +142,8 @@ export const login = async (req, res) => {
         email: user.email,
         address: user.address,
         phone: user.phone,
-        latitude:user.latitude,
-        longitude:user.longitude,
+        latitude: user.latitude,
+        longitude: user.longitude,
         profileType: "user",
       });
     }
@@ -157,8 +165,8 @@ export const login = async (req, res) => {
         occupationaddress: emergency.occupationaddress,
         phone: emergency.phone,
         features: emergency.features,
-        latitude:emergency.latitude,
-        longitude:emergency.longitude,
+        latitude: emergency.latitude,
+        longitude: emergency.longitude,
         photo: emergency.photo,
         profileType: "emergency",
       });

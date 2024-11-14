@@ -5,11 +5,13 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import { useLocation } from "react-router-dom";
 import {io} from "socket.io-client";
 var socket = io("http://localhost:5000");
 
 const CompanyList = () => {
   const { occupation } = useParams();  // Capture occupation from the route params
+ 
   const [companyData, setCompanyData] = useState([]);
   const [userInput, setUserInput] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -17,57 +19,80 @@ const CompanyList = () => {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const[Socket,setSocket]=useState(false);
   const navigate = useNavigate(); 
+  const location = useLocation();
+const { _id } = location.state || {};
+// const { _id: userId } = location.state || {}; 
 
-  // let socket;
-
-  // useEffect(() => {
-  //   socket = new WebSocket('ws://localhost:5000');
-    
-  //   socket.onopen = () => {
-  //     console.log('WebSocket connected');
-  //   };
-    
-  //   socket.onmessage = (event) => {
-  //     console.log('Message from server:', event.data);
-  //   };
-
-  //   socket.onerror = (error) => {
-  //     console.error('WebSocket error:', error);
-  //   };
-
-  //   return () => {
-  //     if (socket) {
-  //       socket.close();
-  //     }
-  //   };
-  // }, []);
+  console.log(_id);
   
- 
-
-  
-  //  useEffect(()=>{
-   
-  //   //socket.on("hii", (arg) => {
-  //     //   console.log("message", arg);
-  //     // });
-  //     socket.emit('setup ', "Hello data get");
-  //     socket.on('connection',()=>{setSocket(true)})
-  //  })
- 
-
   
 
-
+  useEffect(() => {
+    if (selectedCompany) {
+      const roomId = `${_id}_${selectedCompany._id}`;
+      // socket.emit("UserId",{userId:_id});
+      console.log(selectedCompany._id);
+      socket.emit("joinRoom", { userId: _id, companyId: selectedCompany._id });
+      localStorage.setItem("userId", JSON.stringify(_id));
+      localStorage.setItem("company", JSON.stringify(selectedCompany._id));
+  
+      return () => {
+        socket.off("recieved_user_problems");
+      };
+    }
+  }, [selectedCompany, _id]);
+  
+  // const handleNavigate = () => {
+  //   if (selectedCompany) {
+  //     socket.emit("User_Problems", {
+  //       message: problems,
+  //       timestamp: new Date(),
+  //       userId: _id,
+  //       companyId: selectedCompany._id
+  //     });
+  //     setProblems([]);
+  //     navigate('/UserRequested');
+  //   }
+  // };
+  
   const handleNavigate = () => {
-    
-    // const bookingDetails = problems;
-    // if (socket) {
-    //   socket.send(JSON.stringify(bookingDetails));  // Send booking details through WebSocket
-    // }
-    socket.emit('User_Problems', { message: problems, timestamp: new Date() });
-    setProblems(' ');
-    navigate('/UserRequested');  // Navigate to emergency provider page
+    if (selectedCompany) {
+      // Request live location access
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Retrieve location coordinates
+            const locationData = {
+              // latitude: position.coords.latitude,
+              // longitude: position.coords.longitude,
+              latitude: 26.507700,
+              longitude: 80.303067,
+            };
+  
+            // Emit the problem, timestamp, userId, companyId, and location data
+            socket.emit("User_Problems", {
+              message: problems,
+              timestamp: new Date(),
+              userId: _id,
+              companyId: selectedCompany._id,
+              location: locationData,
+            });
+  
+            setProblems([]); // Clear the problems after submission
+            navigate('/UserRequested'); // Navigate to the confirmation or next screen
+          },
+          (error) => {
+            alert("Unable to access your location. Please enable location services.");
+            console.error("Location access denied:", error);
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by your browser.");
+      }
+    }
   };
+  
+
 
   const bgStyle = {
     backgroundImage: "url('https://i.postimg.cc/XqgdLnDN/img.jpg')",
@@ -92,6 +117,7 @@ const CompanyList = () => {
 
   const handleBookNowClick = (company) => {
     setSelectedCompany(company);
+    console.log(company._id);
     setShowModal(true);
   };
 
@@ -121,6 +147,7 @@ const CompanyList = () => {
           ) : (
             companyData.map((company) => (
               <div className="col-md-12 mb-4" key={company._id}>
+                {/* <div>{company._id}</div> */}
                 <div className="card d-flex flex-row border border-black border-3">
                   <img
                     src={`http://localhost:5000${company.photo}`}

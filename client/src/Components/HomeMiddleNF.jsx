@@ -21,8 +21,10 @@ function HomeMiddleNF() {
             </p>
           </div>
           <div className="d-flex align-items-center justify-content-center gap-2">
-          <button type="button" class="btn btn-primary btn-lg">Base class</button>
-          <button type="button" class="btn btn-secondary btn-lg">Base class</button>
+          <button type="button" class="btn btn-primary btn-lg">
+            Back
+          </button>
+          <button type="button" class="btn btn-secondary btn-lg">Explore more</button>
           </div>
         </div>
       </div>

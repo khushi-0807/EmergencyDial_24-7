@@ -1,146 +1,216 @@
-import React, { useEffect, useState } from 'react';
-import GoogleMapReact from 'google-map-react';
-import {io} from "socket.io-client";
+import React, { useEffect, useState, useRef } from 'react';
+import { io } from "socket.io-client";
 import EmergencyProviderNav from './EmergencyProviderNav';
-const AnyReactComponent = ({ text }) => <div>{text}</div>;
-var socket = io("http://localhost:5000");
+import { useLocation } from "react-router-dom";
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine';
+
+const socket = io("http://localhost:5000");
 
 const EmergencyProvider = () => {
   const [accepted, setAccepted] = useState(false);
   const [showCard, setShowCard] = useState(true);
-  const [emergencyData, setEmergencyData] = useState(null);
-  // const [socket, setSocket] = useState(null);
+  const [receivedData, setReceivedData] = useState(null);
 
-  // useEffect(() => {
-  //   const newSocket = new WebSocket("ws://localhost:5000");
+  const [userLocation, setUserLocation] = useState(null);
+  const [userPayment, setUserPayment] = useState(" ");
+  const [companyPayment, setcompanyPayment] = useState(" ");
+  const [providerLocation, setProviderLocation] = useState({
+    lat: 10.99835602,
+    lng: 77.01502627,
+  });
+  const [destinationLocation, setDestinationLocation] = useState();
 
-  //   newSocket.onopen = () => {
-  //     console.log("WebSocket connected");
-  //   };
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
 
-  //   newSocket.onmessage = (event) => {
-  //     try {
-  //       const data = JSON.parse(event.data);
-  //       console.log("Message from server:", data.message);
-  //       setEmergencyData(data); // Update emergency data as needed
-  //     } catch (err) {
-  //       console.error("Error parsing message:", err);
-  //       console.log("Message from server:", event.data);
-  //     }
-  //   };
-
-  //   newSocket.onclose = () => {
-  //     console.log("WebSocket closed");
-  //   };
-
-  //   newSocket.onerror = (error) => {
-  //     console.error("WebSocket error:", error);
-  //   };
-
-  //   setSocket(newSocket);
-
-  //   return () => {
-  //     if (newSocket) newSocket.close();
-  //   };
-  // }, []);
-
-  const [showNotification, setShowNotification] = useState(false);
-  const [receivedData, setReceivedData] = useState('');
-  const [alerts, setAlerts] = useState([]);
-
+  const location = useLocation();
+  const { companyId } = location.state || {};
+ 
+    
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("userId"));
+    setUserPayment(user);
+    const company = JSON.parse(localStorage.getItem("company"));
+    setcompanyPayment(company);
+    console.log("User and company data from localStorage:", { user, company });
+    
+    if (!user || !company) {
+      console.error("User or company data is missing in localStorage.");
+      return;
+    }
+    console.log("Socket connected:", socket.id);
+    socket.emit("joinRoom", { userId: user, companyId:company });
+     console.log("room join");
 
-    socket.on('recieved_user_problems', (data) => {
+    socket.on("roomJoined", (data) => {
+      console.log("Room Joined:", data);
+    });
+
+    socket.on("recieved_user_problems", (data) => {
+      console.log("Data received from server:", data); // Check data structure
+      // if (data.message) {
       console.log(data);
-      setReceivedData(data);
-      setShowNotification(true);
-      setAlerts((prevAlerts) => [...prevAlerts, data]);
-      
+        setReceivedData(data);
+      // } else {
+      //   console.warn("Invalid data received from server:", data);
+      // }
+
+      if (data.location && data.location.latitude !== undefined && data.location.longitude !== undefined) {
+        setDestinationLocation({
+          lat: data.location.latitude,
+          lng: data.location.longitude
+        });
+      }
+    });
+
+    const updateProviderLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const newProviderLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            };
+            setProviderLocation(newProviderLocation);
+            console.log("Provider location updated:", newProviderLocation);
+            socket.emit("updateLocation", {
+              location: newProviderLocation,
+              senderType: "provider",
+            });
+          },
+          (error) => {
+            console.log("Error getting provider's location:", error);
+          }
+        );
+      }
+    };
+
+    updateProviderLocation();
+    const locationInterval = setInterval(updateProviderLocation, 10000); // Update every 10 seconds
+
+    socket.on("locationUpdateUser", ({ location, senderType }) => {
+      if (senderType === "user") {
+        setDestinationLocation(location);
+        console.log(`Received location update from ${senderType}:`, location);
+      }
     });
 
     return () => {
-      socket.off('recieved_user_problems',);
+      socket.off("recieved_user_problems");
+      socket.off("roomJoined");
+      socket.off("locationUpdateUser");
+      clearInterval(locationInterval);
     };
-  }, []);
-    
-  const handleViewAlert = () => {
-    // Reset notification after viewing
-    setShowNotification(false);
-  };
-  
-  // socket.emit("hii", (arg) => {
-  //   console.log("message", arg);
-  // });
-  // socket.on("hello ", "Myself emergency provider , how can i assist you server!!");
+  }, [companyId]);
+
+  useEffect(() => {
+    if (accepted && mapRef.current && !mapInstanceRef.current) {
+      const map = L.map(mapRef.current).setView([providerLocation.lat, providerLocation.lng], 13);
+      mapInstanceRef.current = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const providerIcon = L.icon({
+        iconUrl: 'path/to/provider-icon.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [0, -41]
+      });
+
+      const destinationIcon = L.icon({
+        iconUrl: 'path/to/destination-icon.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [0, -41]
+      });
+
+      L.marker([providerLocation.lat, providerLocation.lng], { icon: providerIcon })
+        .addTo(map)
+        .bindTooltip("Provider Location", { permanent: true, direction: "right", offset: [10, 0] });
+
+      if (destinationLocation) {
+        const isSameLocation =
+          providerLocation.lat === destinationLocation.lat &&
+          providerLocation.lng === destinationLocation.lng;
+
+        if (isSameLocation) {
+          L.marker([destinationLocation.lat, destinationLocation.lng], { icon: destinationIcon })
+            .addTo(map)
+            .bindTooltip("Destination (Same as Provider)", { permanent: true, direction: "right", offset: [10, 0] });
+        } else {
+          L.marker([destinationLocation.lat, destinationLocation.lng], { icon: destinationIcon })
+            .addTo(map)
+            .bindTooltip("Destination Location", { permanent: true, direction: "right", offset: [10, 0] });
+
+          L.Routing.control({
+            waypoints: [
+              L.latLng(providerLocation.lat, providerLocation.lng),
+              L.latLng(destinationLocation.lat, destinationLocation.lng)
+            ]
+          }).addTo(map);
+        }
+      }
+    }
+  }, [accepted, providerLocation, destinationLocation]);
 
   const handleAccept = () => {
     setAccepted(true);
-    socket.emit("Send_Status","accepted");
+    socket.emit("ProviderTrackingInformation",{companyId});
+    socket.emit("Send_Status", "accepted");
   };
 
   const handleReject = () => {
     setShowCard(false);
-    socket.emit("Send_Status","Sorry Not Available");
+    socket.emit("Send_Status", "Sorry Not Available");
   };
 
   const handleWorkDone = () => {
     alert('Work has been marked as done.');
-  };
-
-  const defaultProps = {
-    center: {
-      lat: 10.99835602,
-      lng: 77.01502627,
-    },
-    zoom: 11,
+    socket.emit("workDone", { userPayment, companyPayment });
   };
 
   return (
     <div>
-      <EmergencyProviderNav/>
-    <div className="d-flex flex-column" style={{ height: "100vh" }}>
-      {accepted && (
-        <div className="flex-grow-1" style={{ flexBasis: "75%" }}>
-          <GoogleMapReact
-            bootstrapURLKeys={{ key: "" }}
-            defaultCenter={defaultProps.center}
-            defaultZoom={defaultProps.zoom}
-          >
-            <AnyReactComponent lat={59.955413} lng={30.337844} text="My Marker" />
-          </GoogleMapReact>
-        </div>
-      )}
+      <EmergencyProviderNav />
+      <div className="d-flex flex-column mt-4">
+        {accepted && (
+          <div className="container flex-grow-1" style={{ flexBasis: "75%" }}>
+            <div id="map" ref={mapRef} style={{ width: '100%', height: '50vh', overflow: 'auto' }}></div>
+          </div>
+        )}
 
-      {showCard && receivedData && (
-        <div className="container mt-3 ">
-          <div className="card mb-4 border border-black border-2 p-3 bg-light">
-            <div className="card-body">
-              {!accepted && <h4 className="card-title fw-bold"><em>Emergency from {receivedData.user}</em></h4>}
-              <div className="row">
-                <div className="col-md-6">
-                  <p className="card-text m-2"><strong><em>Problem:</em></strong> {receivedData.message}</p>
-                  {/* <p className="card-text"><strong>Location:</strong> {receivedData.location}</p> */}
-                </div>
+        {showCard && receivedData && (
+          <div className="container mt-4">
+            <div className="card mb-4 border border-black border-2 p-3 bg-light">
+              <div className="card-body">
+            
+                <p className="card-text">
+                <h4 className="card-title fw-bold">
+                    <em>Emergency from {receivedData.userId}</em>
+                  </h4>
+                  <strong><em>Problem:</em></strong> {receivedData.message}
+                </p>
+
+                {!accepted ? (
+                  <div className="d-flex">
+                    <button className="btn btn-success me-2 border border-black" onClick={handleAccept}>Accept</button>
+                    <button className="btn btn-danger border border-black" onClick={handleReject}>Reject</button>
+                  </div>
+                ) : (
+                  <button className="btn btn-success w-100 mt-3" onClick={handleWorkDone}>Work Done</button>
+                )}
               </div>
-
-              {!accepted ? (
-                <div className="d-flex m-2">
-                  <button className="btn btn-success me-2 border border-black" onClick={handleAccept}>Accept</button>
-                  <button className="btn btn-danger border border-black" onClick={handleReject}>Reject</button>
-                </div>
-              ) : (
-                <button className="btn btn-success w-100 mt-3" onClick={handleWorkDone}>Work Done</button>
-              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
-    </div>
-
-  
-
   );
 };
 
 export default EmergencyProvider;
+
