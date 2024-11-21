@@ -42,19 +42,7 @@ const { _id } = location.state || {};
     }
   }, [selectedCompany, _id]);
   
-  // const handleNavigate = () => {
-  //   if (selectedCompany) {
-  //     socket.emit("User_Problems", {
-  //       message: problems,
-  //       timestamp: new Date(),
-  //       userId: _id,
-  //       companyId: selectedCompany._id
-  //     });
-  //     setProblems([]);
-  //     navigate('/UserRequested');
-  //   }
-  // };
-  
+
   const handleNavigate = () => {
     if (selectedCompany) {
       // Request live location access
@@ -63,10 +51,10 @@ const { _id } = location.state || {};
           (position) => {
             // Retrieve location coordinates
             const locationData = {
-              // latitude: position.coords.latitude,
-              // longitude: position.coords.longitude,
-              latitude: 26.507700,
-              longitude: 80.303067,
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              // latitude: 26.507700,
+              // longitude: 80.303067,
             };
   
             // Emit the problem, timestamp, userId, companyId, and location data

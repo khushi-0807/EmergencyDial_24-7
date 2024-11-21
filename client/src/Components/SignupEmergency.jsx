@@ -217,7 +217,7 @@ function SignupEmergency() {
                 </div>
               ))}
             </div>
-            {/* <div className="form-group mb-3">
+             <div className="form-group mb-3">
               <label>Upload Photo</label>
               <input
                 type="file"
@@ -226,7 +226,7 @@ function SignupEmergency() {
                 onChange={handlePhotoChange}
                 required
               />
-            </div> */}
+            </div> 
             <div className="form-group mb-3 position-relative">
               <input
                 type={showPassword ? 'text' : 'password'}

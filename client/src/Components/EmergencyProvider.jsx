@@ -27,22 +27,22 @@ const EmergencyProvider = () => {
 
   const location = useLocation();
   const { companyId } = location.state || {};
- 
-    
+
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("userId"));
     setUserPayment(user);
     const company = JSON.parse(localStorage.getItem("company"));
     setcompanyPayment(company);
     console.log("User and company data from localStorage:", { user, company });
-    
+
     if (!user || !company) {
       console.error("User or company data is missing in localStorage.");
       return;
     }
     console.log("Socket connected:", socket.id);
-    socket.emit("joinRoom", { userId: user, companyId:company });
-     console.log("room join");
+    socket.emit("joinRoom", { userId: user, companyId: company });
+    console.log("room join");
 
     socket.on("roomJoined", (data) => {
       console.log("Room Joined:", data);
@@ -52,7 +52,7 @@ const EmergencyProvider = () => {
       console.log("Data received from server:", data); // Check data structure
       // if (data.message) {
       console.log(data);
-        setReceivedData(data);
+      setReceivedData(data);
       // } else {
       //   console.warn("Invalid data received from server:", data);
       // }
@@ -159,7 +159,7 @@ const EmergencyProvider = () => {
 
   const handleAccept = () => {
     setAccepted(true);
-    socket.emit("ProviderTrackingInformation",{companyId});
+    socket.emit("ProviderTrackingInformation", { companyId });
     socket.emit("Send_Status", "accepted");
   };
 
@@ -187,9 +187,9 @@ const EmergencyProvider = () => {
           <div className="container mt-4">
             <div className="card mb-4 border border-black border-2 p-3 bg-light">
               <div className="card-body">
-            
+
                 <p className="card-text">
-                <h4 className="card-title fw-bold">
+                  <h4 className="card-title fw-bold">
                     <em>Emergency from {receivedData.userId}</em>
                   </h4>
                   <strong><em>Problem:</em></strong> {receivedData.message}

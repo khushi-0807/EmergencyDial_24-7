@@ -24,7 +24,7 @@ function HomeMiddleNF() {
           <button type="button" class="btn btn-primary btn-lg">
             Back
           </button>
-          <button type="button" class="btn btn-secondary btn-lg">Explore more</button>
+          <button type="button" class="btn btn-secondary btn-lg">Emergency Now</button>
           </div>
         </div>
       </div>
