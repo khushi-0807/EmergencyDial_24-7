@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { io } from "socket.io-client";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -20,6 +21,13 @@ function TrackEmergencyService() {
     const [isWorkDone, setIsWorkDone] = useState(false);
     const [company, setcompany] = useState(" ");
     const [user, setuser] = useState(" ");
+    const navigate = useNavigate();
+
+    const proceedPayment= () => {
+        alert("Proceed to Payment")
+        navigate('/payment');
+      };
+    
 
     // Join the room and set up location tracking
     useEffect(() => {
@@ -193,7 +201,7 @@ function TrackEmergencyService() {
                 </div>
             </div>
             {isWorkDone && (
-                <button className="btn btn-primary btn-lg" onClick={() => alert("Proceed to Payment")}>
+                <button className="btn btn-primary btn-lg" onClick={proceedPayment}>
                     Proceed to Payment
                 </button>
             )}

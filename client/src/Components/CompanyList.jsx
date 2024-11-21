@@ -105,7 +105,7 @@ const { _id } = location.state || {};
 
   const handleBookNowClick = (company) => {
     setSelectedCompany(company);
-    console.log(company._id);
+    console.log("company_id",company._id);
     setShowModal(true);
   };
 
