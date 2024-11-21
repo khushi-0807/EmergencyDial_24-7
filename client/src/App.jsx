@@ -10,6 +10,7 @@ import EmergencyProviderDetails from "./Components/EmergencyProviderDetails";
 import EmergencyProvider from "./Components/EmergencyProvider";
 import UserRequested from "./Components/UserRequested";
 import TrackEmergencyService from "./Components/TrackEmergencyService";
+import Payment from "./Components/Payment";
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
         <Route path="/emergencyprovider" element={<EmergencyProvider/>}/>
         <Route path="/UserRequested" element={<UserRequested/>}/>
         <Route path="/TrackEmergencyService" element={<TrackEmergencyService/>}/>
+        <Route path="/payment" element={<Payment/>}/>
       </Routes>
     </Router>
   );

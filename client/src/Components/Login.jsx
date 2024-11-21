@@ -75,7 +75,7 @@ function Login() {
       <div className="container d-flex justify-content-center align-items-center min-vh-100">
         <div className="form-container bg-light p-4 rounded shadow" style={{ maxWidth: '400px', opacity: '0.9' }}>
           <div className="form-header text-center mb-4">
-            <h2>Welcome to Emergengy-dial</h2>
+            <h2>Welcome to Emergency-dial</h2>
             <p>Sign in to Continue</p>
           </div>
           <form className="form" onSubmit={handleSubmit}>
