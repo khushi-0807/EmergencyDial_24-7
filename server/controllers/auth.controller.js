@@ -72,7 +72,7 @@ export const signupEmergency = async (req, res) => {
       confirmPassword,
       latitude,
       longitude,
-      // photo, // Assuming this is your Base64 string
+      photo, // Assuming this is your Base64 string
     } = req.body;
 
     if (password !== confirmPassword) {
@@ -82,16 +82,16 @@ export const signupEmergency = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Remove the "data:image/png;base64," prefix
-    // const base64Data = photo.replace(/^data:image\/png;base64,/, "");
-    // const imgBuffer = Buffer.from(base64Data, 'base64');
+    const base64Data = photo.replace(/^data:image\/png;base64,/, "");
+    const imgBuffer = Buffer.from(base64Data, 'base64');
 
     // Define the image file name and path
-    // const imageName = `${Date.now()}.png`; // Use a timestamp to create a unique file name
-    // const uploadsDir = path.join(__dirname, 'uploads'); // Make sure this folder exists
-    // const photoPath = `/uploads/${imageName}`; // URL path to store in the database
+    const imageName = `${Date.now()}.png`; // Use a timestamp to create a unique file name
+    const uploadsDir = path.join(__dirname, 'uploads'); // Make sure this folder exists
+    const photoPath = `/uploads/${imageName}`; // URL path to store in the database
 
     // Save the image to the uploads directory
-    // fs.writeFileSync(path.join(uploadsDir, imageName), imgBuffer);
+    fs.writeFileSync(path.join(uploadsDir, imageName), imgBuffer);
 
     const newEmergency = new Emergency({
       fullname: fullName,
@@ -103,7 +103,7 @@ export const signupEmergency = async (req, res) => {
       phone: phoneNo,
       latitude,
       longitude,
-      // photo: photoPath, // Store the relative path in the database
+      photo: photoPath, // Store the relative path in the database
       password: hashedPassword,
     });
 

@@ -87,7 +87,7 @@ function SignupEmergency() {
         address,
         phoneNo,
         features:featuresProvided,
-        // photo, // Now compressed and base64-encoded
+        photo, // Now compressed and base64-encoded
         latitude,
         longitude,
         password,
@@ -102,7 +102,7 @@ function SignupEmergency() {
         setAddress('');
         setPhoneNo('');
         setFeaturesProvided(['']); // Reset to an array with one empty string
-        // setPhoto(null);
+        setPhoto(null);
         setPassword('');
         setConfirmPassword('');
         alert('Emergency signed up successfully!');
