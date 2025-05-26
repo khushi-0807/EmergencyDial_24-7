@@ -1,15 +1,16 @@
-// index.js
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
 import Stripe from "stripe";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import connectToMongoDB from "./db/connectToMongoDB.js";
 import authRoutes from "./routes/auth.routes.js";
 import emergencyRoutes from "./routes/emergency.routes.js";
+import companyRoutes from "./routes/company.routes.js";
+import userRoutes from "./routes/user.routes.js";
 import problemRoutes from "./routes/problem.routes.js";
-import paymentroutes from "./routes/payment.routes.js"
+import paymentroutes from "./routes/payment.routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
@@ -27,10 +28,9 @@ const __dirname = dirname(__filename);
 const uniqueId = uuidv4();
 console.log(uniqueId);
 
-
 // Middleware
 app.use(cors());
-app.use(bodyParser.urlencoded({extended:false}))
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json({ limit: "10mb" }));
 app.use(
   "/uploads",
@@ -40,14 +40,15 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/emergency", emergencyRoutes);
+app.use("/api/paymentreciept", companyRoutes);
+app.use("/api/userInformation", userRoutes);
 app.use("/api/problem", problemRoutes);
-app.use("/",paymentroutes)
+app.use("/", paymentroutes);
 
 // Create an HTTP server
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-  // Assuming you have a MongoDB connection function
   connectToMongoDB();
 });
 
@@ -58,6 +59,9 @@ const io = new Server(server, {
   },
 });
 
+// let storedCharges = null;
+// let storedServiceCharges = null;
+
 io.on("connection", (socket) => {
   console.log("Client connected");
 
@@ -65,11 +69,12 @@ io.on("connection", (socket) => {
   socket.on("joinRoom", ({ userId, companyId }) => {
     const roomId = `${userId}_${companyId}`;
     const trackingRoomId = `${roomId}_tracking`;
-    // Define tracking room here
+    const roomNamed = `${userId}_${companyId}_workdone`;
     const roomName = `${userId}_${companyId}`;
     socket.join(roomName);
     socket.join(roomId);
-    socket.join(trackingRoomId); // Join tracking room for location updates
+    socket.join(trackingRoomId);
+    socket.join(roomNamed);
     console.log(
       `User ${userId} joined room: ${roomId} and tracking room: ${trackingRoomId}`
     );
@@ -99,6 +104,15 @@ io.on("connection", (socket) => {
     } else {
       console.error("Room ID is not defined, unable to emit data.");
     }
+    if (roomId) {
+      // Emit problems and location to the company (roomId)
+      io.to(roomId).emit("Payment_reciept", {
+        message,
+      });
+      console.log(`Emitted message to payment room ${roomId}`);
+    } else {
+      console.error("Room ID is not defined, unable to emit data.");
+    }
   });
 
   // Handle status updates
@@ -110,35 +124,61 @@ io.on("connection", (socket) => {
     io.emit("Status_Checked", data);
   });
 
-  socket.on("updateLocation", ({ userId, companyId, location, senderType }) => {
-    const trackingRoomId = `${userId}_${companyId}_tracking`;
-    console.log(`Received location update from ${senderType}:`, location);
-    if (1) {
-      console.log(
-        `Received location update from emitted ${senderType}:`,
-        location
-      );
-      io.to(trackingRoomId).emit("locationUpdateUser", {
-        location,
-        senderType,
-      });
-      console.log(
-        `Received location update from emitted  ${senderType}:`,
-        location
-      );
+  socket.on(
+    "updateProviderLocation",
+    ({ userId, companyId, location, senderType }) => {
+      const trackingRoomId = `${userId}_${companyId}_tracking`;
+      console.log(`Received location update from ${senderType}:`, location);
+
       io.to(trackingRoomId).emit("locationUpdateProvider", {
         location,
         senderType,
       });
+      console.log(`Emitting to room ${trackingRoomId}:`, {
+        location,
+        senderType,
+      });
     }
+  );
+
+  socket.on(
+    "updateUserLocation",
+    ({ userId, companyId, location, senderType }) => {
+      const trackingRoomId = `${userId}_${companyId}_tracking`;
+      console.log(`Received location update from ${senderType}:`, location);
+
+      io.to(trackingRoomId).emit("locationUpdateUser", {
+        location,
+        senderType,
+      });
+      console.log(`Emitting to room ${trackingRoomId}:`, {
+        location,
+        senderType,
+      });
+    }
+  );
+
+  socket.on("PaymentDone", (data) => {
+    console.log("Payment done", data);
+    io.emit("Payment_Proceed", data);
   });
 
   socket.on("workDone", ({ userId, companyId }) => {
     const roomName = `${userId}_${companyId}`;
-    console.log("Worked Done");
-    // io.to(roomName).emit("WorkDone");
-    io.emit("WorkDone");
+
+    console.log("Worked Done between", userId, companyId);
+    io.to(roomName).emit("WorkDone");
   });
+
+  socket.on(
+    "WorkDoneXharges",
+    ({ userId, companyId, charges, servicecharges }) => {
+      const roomName = `${userId}_${companyId}`;
+      console.log("Worked Done charges ", charges, servicecharges);
+      io.to(roomName).emit("workdonecharges", { charges, servicecharges });
+      console.log("workdonecharges emmitted", charges, servicecharges);
+    }
+  );
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");

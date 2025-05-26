@@ -45,11 +45,11 @@ const { _id } = location.state || {};
 
   const handleNavigate = () => {
     if (selectedCompany) {
-      // Request live location access
+  
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            // Retrieve location coordinates
+         
             const locationData = {
               latitude: position.coords.latitude,
               longitude: position.coords.longitude,

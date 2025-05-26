@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { io } from "socket.io-client";
 import L from 'leaflet';
@@ -13,6 +14,7 @@ function TrackEmergencyService() {
     const [providerLocation, setProviderLocation] = useState(null);
     const [routeDistance, setRouteDistance] = useState(null);
     const [providerInformation, SetproviderInformation] = useState(null);
+    const [companyDetails, setCompanyDetails] = useState(null);
     const mapRef = useRef(null);
     const mapInstanceRef = useRef(null);
     const userMarkerRef = useRef(null);
@@ -25,6 +27,7 @@ function TrackEmergencyService() {
 
     const proceedPayment= () => {
         alert("Proceed to Payment")
+        socket.emit("WorkDoneCharges",{user,company,status:"ProccedPayment"})
         navigate('/payment');
       };
     
@@ -41,6 +44,20 @@ function TrackEmergencyService() {
           console.error("User or company data is missing in localStorage.");
           return;
         }
+        const fetchCompanyDetails = async () => {
+            try {
+              const response = await axios.get(`http://localhost:5000/api/paymentreciept/company/${companyId}`);
+              console.log("Company Details",response.data);
+           setCompanyDetails(response.data); // Assuming your API returns company details
+         
+            } catch (error) {
+              console.error("Error fetching company details:", error);
+            }
+          };
+         
+      
+          fetchCompanyDetails();
+      
         socket.emit("joinRoom", { userId, companyId });
         console.log("room join");
 
@@ -54,6 +71,8 @@ function TrackEmergencyService() {
             setIsWorkDone(true); // Show the payment button when work is done
         });
 
+
+
         // Watch user location
         const geoWatchId = navigator.geolocation.watchPosition(
             (position) => {
@@ -62,20 +81,26 @@ function TrackEmergencyService() {
                     lng: position.coords.longitude,
                 };
                 setUserLocation(location);
+                console.log("updated location user",location);
 
                 // Emit location to the server
-                socket.emit("updateLocation", { userId, companyId, location, senderType: "user" });
+                socket.emit("updateUserLocation", { userId, companyId, location, senderType: "user" });
+                console.log("Updated location of user sent");
             },
             (error) => {
                 console.error("Error getting user location:", error);
             },
-            { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 }
         );
 
         // Listen for provider location updates from the server
-        socket.on("locationUpdateProvider", ({ location }) => {
+        socket.on("locationUpdateProvider", ({ location,senderType }) => {
+            // if(senderType=='provider')
+            // {
+    
             setProviderLocation(location);
-        });
+            console.log(`Received location update from ${senderType}:`, location);}
+        );
 
         // Clean up on component unmount
         return () => {
@@ -84,6 +109,7 @@ function TrackEmergencyService() {
             socket.off("WorkDone");
         };
     }, []);
+
 
     // Initialize map and update markers and routes
     useEffect(() => {
@@ -189,13 +215,28 @@ function TrackEmergencyService() {
             <div ref={mapRef} style={{ height: '50vh', width: '100%' }} ></div>
 
             <div className="mt-4">
-                <div className="card mb-4 border border-black border-2 p-3 bg-light">
+                <div className="card mb-2 border border-black border-2 p-3 bg-light">
                     <div className="card-body">
-                        <p className="card-text">
+                        <p className="card-text d-flex border-black border-bottom ">
                             <h4 className="card-title fw-bold">
                                 <em>Emergency Provided by </em>
                             </h4>
-                            {company}
+                            <h4 className="card-title fst-italic mx-2">
+                            "{companyDetails ? companyDetails.companyname : "Loading..."}" </h4>
+                        </p>
+                        <p className=" d-flex  ">
+                            <p className="card-title text-black">
+                           <strong>    <em>Emergency Provider Id :</em></strong> 
+                            </p>
+                            <p className="card-title fst-italic mx-2">
+                            "{companyDetails ? companyDetails.companyId : "Loading..."}" </p>
+                        </p>
+                        <p className=" d-flex ">
+                            <p className="card-title text-black">
+                            <strong>    <em>Location from</em></strong> 
+                            </p>
+                            <p className="card-title fst-italic mx-2">
+                            "{companyDetails ? companyDetails.address : "Loading..."}" </p>
                         </p>
                     </div>
                 </div>
@@ -210,3 +251,4 @@ function TrackEmergencyService() {
 }
 
 export default TrackEmergencyService;
+

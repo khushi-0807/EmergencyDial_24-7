@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
+import axios from 'axios';
 import { io } from "socket.io-client";
 import EmergencyProviderNav from './EmergencyProviderNav';
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-routing-machine';
@@ -12,20 +14,25 @@ const EmergencyProvider = () => {
   const [accepted, setAccepted] = useState(false);
   const [showCard, setShowCard] = useState(true);
   const [receivedData, setReceivedData] = useState(null);
-
+  const [showModal, setShowModal] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [userPayment, setUserPayment] = useState(" ");
   const [companyPayment, setcompanyPayment] = useState(" ");
   const [providerLocation, setProviderLocation] = useState({
-    lat: 10.99835602,
-    lng: 77.01502627,
+    // lat: 10.99835602,
+    // lng: 77.01502627,
   });
-  const [destinationLocation, setDestinationLocation] = useState();
-
+  const [destinationLocation, setDestinationLocation] = useState({});
+  const [companyDetails, setCompanyDetails] = useState(null);
+  const [userDetails, setUserDetails] = useState(null);
+  const [workdonecharges, setworkdonecharges] = useState([]);
+  const [servicecharge, setservicecharge] = useState([]);
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
 
   const location = useLocation();
+  const navigate = useNavigate();
+
   const { companyId } = location.state || {};
 
 
@@ -40,6 +47,23 @@ const EmergencyProvider = () => {
       console.error("User or company data is missing in localStorage.");
       return;
     }
+
+    const fetchCompanyDetails = async () => {
+            try {
+              const response = await axios.get(`http://localhost:5000/api/paymentreciept/company/${company}`);
+              console.log("Company Details",response.data);
+           setCompanyDetails(response.data); // Assuming your API returns company details
+         
+            } catch (error) {
+              console.error("Error fetching company details:", error);
+            }
+          };
+         
+      
+          fetchCompanyDetails();
+      
+       
+   
     console.log("Socket connected:", socket.id);
     socket.emit("joinRoom", { userId: user, companyId: company });
     console.log("room join");
@@ -72,10 +96,13 @@ const EmergencyProvider = () => {
             const newProviderLocation = {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
+              // lat: 26.507700,
+              // lng: 80.303067,
             };
             setProviderLocation(newProviderLocation);
             console.log("Provider location updated:", newProviderLocation);
-            socket.emit("updateLocation", {
+            socket.emit("updateProviderLocation", {
+              userId: user, companyId: company,
               location: newProviderLocation,
               senderType: "provider",
             });
@@ -88,7 +115,7 @@ const EmergencyProvider = () => {
     };
 
     updateProviderLocation();
-    const locationInterval = setInterval(updateProviderLocation, 10000); // Update every 10 seconds
+    const locationInterval = setInterval(updateProviderLocation, 20000); // Update every 10 seconds
 
     socket.on("locationUpdateUser", ({ location, senderType }) => {
       if (senderType === "user") {
@@ -104,6 +131,19 @@ const EmergencyProvider = () => {
       clearInterval(locationInterval);
     };
   }, [companyId]);
+  console.log(companyDetails);
+
+
+  useEffect(() => {
+    axios.get(`http://localhost:5000/api/userInformation/user/${userPayment}`)
+      .then((response) => {
+        console.log("User Details",response.data);
+           setUserDetails(response.data);
+      })
+      .catch((error) => console.error('Error fetching company data:', error));
+  },[userPayment]);
+
+   console.log("user details fetched properly" ,userDetails);
 
   useEffect(() => {
     if (accepted && mapRef.current && !mapInstanceRef.current) {
@@ -157,6 +197,19 @@ const EmergencyProvider = () => {
     }
   }, [accepted, providerLocation, destinationLocation]);
 
+  useEffect(() => {
+    // Listen for 'Status_Checked' event from the server
+    socket.on('Payment_Proceed', (data) => {
+      console.log("Received Data:", data);
+      // Show alert message based on status
+      if (data === "Done") {
+      navigate('/ProviderWorkDone');
+      } else  {
+        alert("Sorry Not Available.");
+      }
+    });
+  });
+
   const handleAccept = () => {
     setAccepted(true);
     socket.emit("ProviderTrackingInformation", { companyId });
@@ -169,14 +222,47 @@ const EmergencyProvider = () => {
   };
 
   const handleWorkDone = () => {
+    
     alert('Work has been marked as done.');
-    socket.emit("workDone", { userPayment, companyPayment });
+    setShowModal(true);
+   
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setProblems([]);
+  };
+
+  const handleAddProblem = () => {
+    setworkdonecharges([...workdonecharges, '']);
+    setservicecharge([...servicecharge, '']);
+  };
+
+  const handleProblemChange = (index, value, fieldType) => {
+    if (fieldType === "workdonecharges") {
+      const updatedProblems = workdonecharges.map((item, i) => (i === index ? value : item));
+      setworkdonecharges(updatedProblems);
+    } else if (fieldType === "servicecharge") {
+      const updatedCharges = servicecharge.map((item, i) => (i === index ? value : item));
+      setservicecharge(updatedCharges);
+    }
+  };
+
+  const handleNavigate = () => {
+   
+           socket.emit("WorkDoneCharges", { userId:userPayment, companyId:companyPayment ,charges:workdonecharges,servicecharges:servicecharge});
+            setworkdonecharges([]); // Clear the problems after submission
+            setservicecharge([]);
+            socket.emit("workDone",  { userId:userPayment, companyId:companyPayment });
+            navigate('/ProviderProcessCompleted'); // Navigate to the confirmation or next screen
+         
   };
 
   return (
     <div>
       <EmergencyProviderNav />
-      <div className="d-flex flex-column mt-4">
+      <h1 class="p-3 container fst-italic ">Welcome  {companyDetails ? companyDetails.companyname : "Loading..."} !!</h1>
+      <div className="d-flex flex-column ">
         {accepted && (
           <div className="container flex-grow-1" style={{ flexBasis: "75%" }}>
             <div id="map" ref={mapRef} style={{ width: '100%', height: '50vh', overflow: 'auto' }}></div>
@@ -189,10 +275,28 @@ const EmergencyProvider = () => {
               <div className="card-body">
 
                 <p className="card-text">
-                  <h4 className="card-title fw-bold">
-                    <em>Emergency from {receivedData.userId}</em>
-                  </h4>
-                  <strong><em>Problem:</em></strong> {receivedData.message}
+                <p className="card-text d-flex border-black border-bottom ">
+                            <h4 className="card-title fw-bold">
+                                <em>Emergency from </em>
+                            </h4>
+                            <h4 className="card-title fst-italic mx-2">
+                            "{userDetails ? userDetails.address : "Loading..."}" </h4>
+                        </p>
+                        <p className=" d-flex  ">
+                            <p className="text-black">
+                               <strong> <em>Username :</em></strong>
+                            </p>
+                            <p className=" fst-italic mx-2">
+                            "{userDetails ? userDetails.fullname : "Loading..."}" </p>
+                        </p>
+                        <p className=" d-flex  ">
+                            <p className=" text-black">
+                               <strong> <em>Problems :</em></strong>
+                            </p>
+                            <p className=" fst-italic mx-2">
+                          "{receivedData.message}" </p>
+                        </p>
+                  
                 </p>
 
                 {!accepted ? (
@@ -203,6 +307,53 @@ const EmergencyProvider = () => {
                 ) : (
                   <button className="btn btn-success w-100 mt-3" onClick={handleWorkDone}>Work Done</button>
                 )}
+
+{showModal && (
+          <div className="modal fade show" style={{ display: 'block', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 1050 }}>
+            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '800px', margin: '0 auto' }}>
+              <div className="modal-content border border-black border-3">
+                <div className="modal-header border-bottom border-black border-2">
+                  <h5 className="modal-title border-bottom border-1 border-black fw-bold"><em>Any Extra Service/Charge</em></h5>
+                  <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                </div>
+                <div className="modal-body border-bottom border-black border-2">
+                  {workdonecharges.map((workdonecharges, index) => (
+  <div className="mb-3 d-flex" key={index}>
+    <input
+      type="text"
+      className="form-control border border-black border-1"
+      value={workdonecharges}
+      onChange={(e) => handleProblemChange(index, e.target.value, "workdonecharges")}
+      placeholder="Enter service/charge description"
+    />
+    <input
+      type="number"
+      min="1"
+      step="any"
+      className="form-control border border-black border-1 ms-2"
+      value={servicecharge[index] || ""}
+      onChange={(e) => handleProblemChange(index, e.target.value, "servicecharge")}
+      placeholder="00 Rs."
+    />
+  </div>
+))}
+                 <form>
+                 <div class="form-group mb-2 d-flex">
+                   <div className='mx-2'>
+                     <label for="exampleFormControlFile1 mx-2 fw-bold text-black">Add Proof:</label></div>
+                     <input type="file" class="form-control-file" id="exampleFormControlFile1"/>
+                   </div>
+                 </form>
+                  <button type="button" className="btn btn-secondary" onClick={handleAddProblem}>+ Add Service Charge with Description</button>
+                </div>
+                <div className="modal-footer d-flex justify-content-between border-top border-black border-2">
+                  <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Close</button>
+                  <button type="button" className="btn btn-primary" onClick={handleNavigate}>Submit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
               </div>
             </div>
           </div>
@@ -213,4 +364,3 @@ const EmergencyProvider = () => {
 };
 
 export default EmergencyProvider;
-

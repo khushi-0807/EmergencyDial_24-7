@@ -11,6 +11,8 @@ import EmergencyProvider from "./Components/EmergencyProvider";
 import UserRequested from "./Components/UserRequested";
 import TrackEmergencyService from "./Components/TrackEmergencyService";
 import Payment from "./Components/Payment";
+import ProviderWorkDone from "./Components/ProviderWorkDone";
+import ProviderProcessCompleted from "./Components/ProviderProcessCompleted";
 
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
         <Route path="/UserRequested" element={<UserRequested/>}/>
         <Route path="/TrackEmergencyService" element={<TrackEmergencyService/>}/>
         <Route path="/payment" element={<Payment/>}/>
+        <Route path="/ProviderWorkDone" element={<ProviderWorkDone/>}/>
+        <Route path="/ProviderProcessCompleted" element={<ProviderProcessCompleted/>}/>
       </Routes>
     </Router>
   );
